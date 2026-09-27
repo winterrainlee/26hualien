@@ -3,10 +3,12 @@ const svg = document.querySelector('#map');
 const title = document.querySelector('#title');
 const back = document.querySelector('#back');
 const dialog = document.querySelector('#place-dialog');
+const dialogBack = document.querySelector('#dialog-back');
 const notesButton = document.querySelector('#region-notes');
 const NS = 'http://www.w3.org/2000/svg';
 let activePlace, currentRegion, zoomBounds;
 let zoomStack = [];
+
 function element(tag, attrs = {}, parent = svg, text) {
   const el = document.createElementNS(NS, tag);
   Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
@@ -21,6 +23,11 @@ function setView(main, view) {
   notesButton.hidden = true;
   title.textContent = main; svg.replaceChildren(); svg.dataset.view = view;
   svg.setAttribute('aria-label', main + ' 지도');
+}
+function setDialogMode(mode) {
+  dialog.classList.remove('note-list-mode','note-reader');
+  if (mode) dialog.classList.add(mode);
+  dialogBack.hidden = mode !== 'note-reader';
 }
 function renderTaiwan(focus = false) {
   currentRegion = null; back.hidden = true;
@@ -120,6 +127,7 @@ function renderRegion(bounds) {
   });
 }
 function openChoices(places,trigger){
+  setDialogMode('');
   document.querySelector('#place-kind').hidden=false;
   activePlace=trigger;document.querySelector('#place-kind').textContent=currentRegion.name;
   document.querySelector('#place-name').textContent='장소 선택';
@@ -127,23 +135,60 @@ function openChoices(places,trigger){
   places.forEach(p=>{const b=document.createElement('button');b.textContent=p.name+' · '+p.zh;b.onclick=()=>{dialog.close();openPlace(p,trigger);};body.append(b);});dialog.showModal();
 }
 function openPlace(place,trigger){
+  setDialogMode('');
   document.querySelector('#place-kind').hidden=false;
   activePlace=trigger;document.querySelector('#place-kind').textContent=place.region;
   document.querySelector('#place-name').textContent=place.name+' · '+place.zh;
   document.querySelector('#place-text').textContent=place.text||'아직 기록이 없어.';dialog.showModal();
 }
-notesButton.addEventListener('click',()=>{
-  activePlace=notesButton;
-  const notes=REGION_NOTES.filter(note=>note.regionIds.includes(currentRegion.id));
+function currentRegionNotes(){
+  return REGION_NOTES.filter(note=>note.regionIds.includes(currentRegion.id));
+}
+function renderNoteList(){
+  setDialogMode('note-list-mode');
   document.querySelector('#place-kind').hidden=true;
+  const notes=currentRegionNotes();
   document.querySelector('#place-name').textContent=`${currentRegion.name} 노트 ${notes.length}개`;
   const body=document.querySelector('#place-text');body.replaceChildren();
-  if(notes.length){
-    const list=document.createElement('ul');list.className='note-list';
-    notes.forEach(note=>{const item=document.createElement('li');item.textContent=note.title;list.append(item);});
-    body.append(list);
-  }else body.textContent='아직 노트가 없어.';
-  dialog.showModal();
+  if(!notes.length){body.textContent='아직 노트가 없어.';return;}
+  const list=document.createElement('ul');list.className='note-list';
+  notes.forEach(note=>{
+    const item=document.createElement('li');
+    const button=document.createElement('button');
+    button.type='button';button.className='note-link';button.textContent=note.title;
+    button.addEventListener('click',()=>openNote(note));
+    item.append(button);list.append(item);
+  });
+  body.append(list);
+}
+function renderNoteBody(note){
+  const body=document.querySelector('#place-text');body.replaceChildren();
+  const content=(note.body||'').trim();
+  if(!content){body.textContent='아직 내용이 없어.';return;}
+  content.split(/\n\s*\n/).forEach(block=>{
+    const p=document.createElement('p');p.className='note-paragraph';p.textContent=block.trim();body.append(p);
+  });
+}
+function openNote(note){
+  setDialogMode('note-reader');
+  document.querySelector('#place-kind').hidden=false;
+  document.querySelector('#place-kind').textContent=currentRegion.name+' · 노트';
+  document.querySelector('#place-name').textContent=note.title;
+  renderNoteBody(note);
+  dialog.scrollTop=0;
+}
+function openNoteList(){
+  activePlace=notesButton;
+  renderNoteList();
+  if(!dialog.open)dialog.showModal();
+  dialog.scrollTop=0;
+}
+notesButton.addEventListener('click',openNoteList);
+dialogBack.addEventListener('click',()=>{
+  renderNoteList();
+  dialog.scrollTop=0;
+  const first=dialog.querySelector('.note-link');
+  if(first)first.focus({preventScroll:true});
 });
 back.addEventListener('click',()=>{
   if(currentRegion){if(zoomStack.length)renderRegion(zoomStack.pop());else renderHualien(currentRegion.id);}
@@ -151,7 +196,7 @@ back.addEventListener('click',()=>{
 });
 dialog.querySelector('.close').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
-dialog.addEventListener('close',()=>activePlace?.focus({preventScroll:true}));
+dialog.addEventListener('close',()=>{setDialogMode('');activePlace?.focus({preventScroll:true});});
 new ResizeObserver(()=>{if(currentRegion&&!dialog.open)renderRegion(zoomBounds);}).observe(svg);
 try {if(MAP_DATA.regions.length!==4)throw Error('Incomplete regions');renderTaiwan();}
 catch(e){console.error('Map initialization failed',e);title.textContent='지도를 불러오지 못했어. 새로고침해 줘.';}
