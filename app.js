@@ -76,6 +76,11 @@ function renderRegion(bounds) {
     const school=MAP_DATA.regions.find(region=>region.id==='school');
     element('path',{class:'region-fill school-area',d:school.path,'aria-label':'지학촌 志學村'},land);
   }
+  (NEIGHBOR_LABELS[r.id]||[]).forEach(label=>{
+    const [x,y]=screenPoint(label,t);
+    if(x<26||x>334||y<76||y>506)return;
+    element('text',{class:'neighbor-label',x,y,'text-anchor':'middle','dominant-baseline':'middle','aria-hidden':'true'},svg,label.name);
+  });
   const places=MAP_DATA.places.filter(p=>p.regionId===r.id);
   const threshold=52*360/svg.getBoundingClientRect().width;
   const groups=[];
