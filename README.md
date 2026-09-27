@@ -31,6 +31,21 @@ sh scripts/setup-drafts.sh
 - 장소 스팟 발행: `skills/publish-spot/SKILL.md`
 - 모바일에서는 별도 초안 파일 없이 전달한 텍스트를 그대로 같은 발행 규칙의 입력으로 사용할 수 있다.
 
+### 노트 저장 구조
+
+노트 원본은 `notes/*.md`에 **1노트 1파일**로 저장한다. 파일명(확장자 제외)이 안정적인 노트 ID이며, 제목이 바뀌어도 기존 파일명은 유지한다. 각 파일의 front matter에는 필수 정보인 `title`과 `regions`만 둔다.
+
+```md
+---
+title: 루이수이에서 본 지역 특산물
+regions: ruisui
+---
+
+본문을 자유롭게 쓴다.
+```
+
+`notes.js`는 사람이 편집하는 원본이 아니라 `scripts/build_notes.py`가 생성하는 브라우저용 번들이다. 향후 노트 간 링크·태그 같은 기능을 추가해도 Markdown 원본을 기준으로 확장한다.
+
 ## 지도 출처와 재생성
 
 [Taiwan Atlas 2021.9.20](https://github.com/dkaoster/taiwan-atlas)의 [towns-10t.json](https://cdn.jsdelivr.net/npm/taiwan-atlas@2021.9.20/towns-10t.json)을 `data/taiwan-atlas-towns-10t.json`에 고정했다. 원자료는 대만 내정부 [鄉鎮市區界線(TWD97經緯度)](https://data.gov.tw/dataset/7441)이며, Atlas에서 양자화·단순화한 경계다. 2026년 실시간 행정경계라는 의미는 아니다. 배포 패키지의 MIT 라이선스는 `data/LICENSE-taiwan-atlas.txt`에 보존했다.
@@ -39,11 +54,13 @@ sh scripts/setup-drafts.sh
 
 ```sh
 python3 scripts/build_map.py
+python3 scripts/build_notes.py
 node --check map-data.js
+node --check notes.js
 node --check app.js
 ```
 
-빌드 도구는 Python 표준 라이브러리만 사용한다. `map-data.js`는 생성 결과다. 장소 데이터는 `data/places.json`에서 관리한다.
+빌드 도구는 Python 표준 라이브러리만 사용한다. `map-data.js`와 `notes.js`는 생성 결과다. 장소 원본은 `data/places.json`, 노트 원본은 `notes/*.md`에서 관리한다.
 
 ## 검증
 
@@ -63,6 +80,6 @@ GitHub Pages: `main / root`. 빌드 서버나 npm 설치가 필요 없다.
 
 ## 지역 노트와 아이콘
 
-`notes.js`의 `REGION_NOTES`는 장소와 별도로 관리하며 `regionIds`의 현재 범주에 연결된 노트만 센다. 우하단 노트 수 버튼을 누르면 불렛 목록을 연다. 현재 루이수이의 세 항목은 테스트용이며 다른 지역은 0개다.
+`notes/*.md`의 원본을 `scripts/build_notes.py`가 `notes.js`의 `REGION_NOTES`로 생성한다. `regionIds`의 현재 범주에 연결된 노트만 세며, 우하단 노트 수 버튼에서 제목 목록과 상세 읽기모드로 들어간다. 현재 루이수이의 세 항목은 테스트용이며 다른 지역은 0개다.
 
 기차 아이콘은 [Lucide train-front](https://lucide.dev/icons/train-front)의 SVG를 2026-09-27에 받아 색상만 변경했다. 원본은 https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/train-front.svg 이며 라이선스는 `assets/LICENSE-lucide.txt`에 보존한다.
