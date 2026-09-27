@@ -17,6 +17,20 @@
 - 새 장소에는 방문 경험을 임의로 작성하지 않았다. 기록이 없는 카드는 빈 상태 문구를 보여 준다.
 - 정적 HTML/CSS/JS + SVG. 브라우저에서 외부 라이브러리나 지도 데이터를 다운로드하지 않는다.
 
+## 로컬 초안과 발행
+
+로컬에서 메모를 쌓을 때는 Git에서 제외되는 `.drafts/`를 사용한다.
+
+```sh
+sh scripts/setup-drafts.sh
+```
+
+실행하면 `.drafts/inbox/`와 `.drafts/scratch/`를 만든다. 초안 원문은 수정·삭제하지 않고 발행 입력으로만 사용한다.
+
+- 지역 노트 발행: `skills/publish-note/SKILL.md`
+- 장소 스팟 발행: `skills/publish-spot/SKILL.md`
+- 모바일에서는 별도 초안 파일 없이 전달한 텍스트를 그대로 같은 발행 규칙의 입력으로 사용할 수 있다.
+
 ## 지도 출처와 재생성
 
 [Taiwan Atlas 2021.9.20](https://github.com/dkaoster/taiwan-atlas)의 [towns-10t.json](https://cdn.jsdelivr.net/npm/taiwan-atlas@2021.9.20/towns-10t.json)을 `data/taiwan-atlas-towns-10t.json`에 고정했다. 원자료는 대만 내정부 [鄉鎮市區界線(TWD97經緯度)](https://data.gov.tw/dataset/7441)이며, Atlas에서 양자화·단순화한 경계다. 2026년 실시간 행정경계라는 의미는 아니다. 배포 패키지의 MIT 라이선스는 `data/LICENSE-taiwan-atlas.txt`에 보존했다.
