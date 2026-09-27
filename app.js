@@ -1,94 +1,115 @@
 'use strict';
-
 const svg = document.querySelector('#map');
 const title = document.querySelector('#title');
 const back = document.querySelector('#back');
 const dialog = document.querySelector('#place-dialog');
 const NS = 'http://www.w3.org/2000/svg';
-let activePlace;
-
-function element(tag, attributes = {}, parent = svg, text) {
+let activePlace, currentRegion, zoomBounds;
+let zoomStack = [];
+function element(tag, attrs = {}, parent = svg, text) {
   const el = document.createElementNS(NS, tag);
-  for (const [key, value] of Object.entries(attributes)) el.setAttribute(key, value);
+  Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
   if (text) el.textContent = text;
-  parent.append(el);
-  return el;
+  parent.append(el); return el;
 }
-
 function activate(el, callback) {
   el.addEventListener('click', callback);
-  el.addEventListener('keydown', event => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      callback();
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') {e.preventDefault(); callback();} });
+}
+function setView(main, view) {
+  title.textContent = main; svg.replaceChildren(); svg.dataset.view = view;
+  svg.setAttribute('aria-label', main + ' 지도');
+}
+function renderTaiwan(focus = false) {
+  currentRegion = null; back.hidden = true;
+  setView('화롄에서 보낸 세 달','taiwan');
+  element('path',{class:'land',d:MAP_DATA.taiwan});
+  const el=element('path',{class:'hualien',d:MAP_DATA.highlight,tabindex:0,role:'button','aria-label':'화롄현 열기'});
+  activate(el,()=>{renderHualien();back.focus();}); if(focus)el.focus();
+}
+function renderHualien(focusId) {
+  currentRegion=null; zoomStack=[]; back.hidden=false; back.textContent='← 대만으로';
+  setView('화롄현 花蓮縣','hualien');
+  element('path',{class:'county',d:MAP_DATA.county});
+  element('path',{class:'town-boundary',d:MAP_DATA.boundaries});
+  MAP_DATA.regions.forEach(r=>element('path',{class:'region-fill',d:r.path}));
+  MAP_DATA.regions.forEach(r=>{
+    const g=element('g',{class:'region-label',role:'button',tabindex:0,'data-region':r.id,'aria-label':r.name+' '+r.zh+' 열기',transform:`translate(${r.label})`});
+    element('rect',{x:-53,y:-26,width:106,height:52,rx:16},g);
+    element('text',{'text-anchor':'middle',y:-3},g,r.name);
+    element('text',{class:'sub','text-anchor':'middle',y:15},g,r.zh);
+    activate(g,()=>{currentRegion=r;zoomStack=[];renderRegion(r.bounds);back.focus();});
+    if(r.id===focusId)g.focus();
+  });
+}
+function fit(bounds) {
+  const [x0,y0,x1,y1]=bounds;
+  const k=Math.min(264/Math.max(x1-x0,.001),408/Math.max(y1-y0,.001));
+  return {k, x:180-k*(x0+x1)/2,y:302-k*(y0+y1)/2};
+}
+function screenPoint(p,t){return [p.point[0]*t.k+t.x,p.point[1]*t.k+t.y];}
+function renderRegion(bounds) {
+  zoomBounds=bounds; const r=currentRegion,t=fit(bounds);
+  setView(r.name+' '+r.zh,r.id); back.textContent=zoomStack.length?'← 지역 전체':'← 화롄현';
+  const land=element('g',{transform:`translate(${t.x},${t.y}) scale(${t.k})`});
+  element('path',{class:'context-land',d:MAP_DATA.county},land);
+  element('path',{class:'region-fill selected',d:r.path},land);
+  element('path',{class:'town-boundary',d:MAP_DATA.boundaries},land);
+  const places=MAP_DATA.places.filter(p=>p.regionId===r.id);
+  const threshold=52*360/svg.getBoundingClientRect().width;
+  const groups=[];
+  places.forEach(p=>{
+    const xy=screenPoint(p,t);
+    if(xy[0]<0||xy[0]>360||xy[1]<65||xy[1]>548)return;
+    const group=groups.find(g=>g.every(q=>{const v=screenPoint(q,t);return Math.hypot(xy[0]-v[0],xy[1]-v[1])<threshold;}));
+    if(group)group.push(p);else groups.push([p]);
+  });
+  const occupied=[];
+  groups.forEach(group=>{
+    const points=group.map(p=>screenPoint(p,t));
+    const x=points.reduce((s,p)=>s+p[0],0)/points.length,y=points.reduce((s,p)=>s+p[1],0)/points.length;
+    const cluster=group.length>1;
+    const g=element('g',{class:cluster?'place cluster':'place',role:'button',tabindex:0,
+      'aria-label':cluster?`${group.length}개 장소 확대`:group[0].name+' / '+group[0].zh,
+      'data-place':cluster?group.map(p=>p.id).join(','):group[0].id,transform:`translate(${x},${y})`});
+    element('circle',{class:'place-hit',r:threshold/2},g);
+    element('circle',{r:cluster?17:7},g);
+    if(cluster)element('text',{'text-anchor':'middle',y:5,class:'cluster-count'},g,String(group.length));
+    else {
+      const p=group[0],label=p.mapName||p.name,width=Math.max(label.length*12,p.zh.length*10)+8;
+      const left=x>180,lx=left?-14:14,anchor=left?'end':'start';
+      const box=[left?x-14-width:x+14,y-18,width,38];
+      if(box[0]>=4&&box[0]+width<=356&&!occupied.some(b=>box[0]<b[0]+b[2]&&box[0]+box[2]>b[0]&&box[1]<b[1]+b[3]&&box[1]+box[3]>b[1])) {
+        element('text',{x:lx,y:-3,'text-anchor':anchor},g,label);
+        element('text',{class:'sub',x:lx,y:14,'text-anchor':anchor},g,p.zh);occupied.push(box);
+      }
     }
+    activate(g,()=>{
+      if(!cluster){openPlace(group[0],g);return;}
+      const xs=group.map(p=>p.point[0]),ys=group.map(p=>p.point[1]);
+      if(Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys))<.001){openChoices(group,g);return;}
+      zoomStack.push(bounds);renderRegion([Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]);back.focus();
+    });
   });
 }
-
-function setView(main, name) {
-  title.textContent = main;
-  svg.replaceChildren();
-  svg.setAttribute('aria-label', name);
-  svg.dataset.view = name === '대만 본섬 지도' ? 'taiwan' : 'hualien';
+function openChoices(places,trigger){
+  activePlace=trigger;document.querySelector('#place-kind').textContent=currentRegion.name;
+  document.querySelector('#place-name').textContent='장소 선택';
+  const body=document.querySelector('#place-text');body.replaceChildren();
+  places.forEach(p=>{const b=document.createElement('button');b.textContent=p.name+' · '+p.zh;b.onclick=()=>{dialog.close();openPlace(p,trigger);};body.append(b);});dialog.showModal();
 }
-
-function renderTaiwan(restoreFocus = false) {
-  back.hidden = true;
-  setView('화롄에서 보낸 세 달', '대만 본섬 지도');
-  element('path', {class: 'land', d: MAP_DATA.taiwan});
-  const county = element('path', {class: 'hualien', d: MAP_DATA.highlight,
-    tabindex: 0, role: 'button', 'aria-label': '화롄현 열기'});
-  activate(county, () => { renderHualien(); back.focus({preventScroll: true}); });
-  if (restoreFocus) county.focus({preventScroll: true});
+function openPlace(place,trigger){
+  activePlace=trigger;document.querySelector('#place-kind').textContent=place.region;
+  document.querySelector('#place-name').textContent=place.name+' · '+place.zh;
+  document.querySelector('#place-text').textContent=place.text||'아직 기록이 없어.';dialog.showModal();
 }
-
-function renderHualien() {
-  back.hidden = false;
-  setView('화롄현 花蓮縣', '화롄현 장소 지도');
-  element('path', {class: 'county', d: MAP_DATA.county});
-  element('path', {class: 'town-boundary', d: MAP_DATA.boundaries, 'aria-hidden': 'true'});
-
-  // Separate nearby touch targets at county scale; geographic coordinates
-  // remain in place.point. No connecting lines are drawn.
-  MAP_DATA.places.forEach(place => {
-    const [dx, dy] = place.displayOffset || [0, 0];
-    const [x, y] = [place.point[0] + dx, place.point[1] + dy];
-    const right = place.labelSide === 'right';
-    const labelX = right ? 14 : -14;
-    const anchor = right ? 'start' : 'end';
-    const group = element('g', {class: 'place', tabindex: 0, role: 'button',
-      'data-place': place.id, 'data-kind': place.kind, 'aria-label': `${place.name} / ${place.zh}`,
-      'aria-haspopup': 'dialog', transform: `translate(${x},${y})`});
-    element('rect', {class: 'place-hit', x: right ? -13 : -146, y: -24, width: 159, height: 48, rx: 10}, group);
-    element('circle', {r: 7}, group);
-    element('text', {x: labelX, y: -3, 'text-anchor': anchor}, group, place.mapName || place.name);
-    element('text', {class: 'sub', x: labelX, y: 14, 'text-anchor': anchor}, group, place.zh);
-    activate(group, () => openPlace(place, group));
-  });
-}
-
-function openPlace(place, trigger) {
-  activePlace = trigger;
-  document.querySelector('#place-kind').textContent = `${place.kind === 'area' ? 'AREA' : 'PLACE'} · ${place.region}`;
-  document.querySelector('#place-name').textContent = `${place.name} · ${place.zh}`;
-  document.querySelector('#place-text').textContent = place.text || '아직 기록이 없어.';
-  dialog.showModal();
-}
-
-back.addEventListener('click', () => renderTaiwan(true));
-dialog.querySelector('.close').addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', event => {
-  if (event.target === dialog) dialog.close();
+back.addEventListener('click',()=>{
+  if(currentRegion){if(zoomStack.length)renderRegion(zoomStack.pop());else renderHualien(currentRegion.id);}
+  else renderTaiwan(true);
 });
-dialog.addEventListener('close', () => activePlace?.focus({preventScroll: true}));
-
-try {
-  if (MAP_DATA.towns.length !== 13 || !MAP_DATA.places.length) throw new Error('Incomplete map data');
-  renderTaiwan();
-} catch (error) {
-  console.error('Map initialization failed:', error);
-  const errorMessage = document.createElement('p');
-  errorMessage.setAttribute('role', 'alert');
-  errorMessage.textContent = '지도를 표시하지 못했어. 새로고침해서 다시 시도해 줘.';
-  svg.after(errorMessage);
-}
+dialog.querySelector('.close').addEventListener('click',()=>dialog.close());
+dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
+dialog.addEventListener('close',()=>activePlace?.focus({preventScroll:true}));
+new ResizeObserver(()=>{if(currentRegion&&!dialog.open)renderRegion(zoomBounds);}).observe(svg);
+try {if(MAP_DATA.regions.length!==4)throw Error('Incomplete regions');renderTaiwan();}
+catch(e){console.error('Map initialization failed',e);title.textContent='지도를 불러오지 못했어. 새로고침해 줘.';}
