@@ -1,11 +1,40 @@
 [
   {
-    "id": "ndhu-back-gate",
-    "name": "동화대학 후문",
-    "zh": "東華大學後門",
-    "lon": 121.537278,
-    "lat": 23.905151,
-    "text": "테스트 기록이야. 자전거로 학교와 지학을 오가며 자주 지나게 되는 경계. 나중에는 이곳에 실제 경험과 사진을 차곡차곡 연결할 수 있어."
+    "id": "hualien-station",
+    "name": "화롄 기차역",
+    "zh": "花蓮車站",
+    "lon": 121.601319,
+    "lat": 23.992637,
+    "region": "花蓮市",
+    "kind": "place",
+    "text": "",
+    "source": "https://deh.csie.ncku.edu.tw/poi_detail/709",
+    "displayOffset": [
+      0,
+      -15
+    ],
+    "labelSide": "left"
+  },
+  {
+    "id": "ndhu",
+    "name": "동화대학",
+    "zh": "東華大學",
+    "lon": 121.55,
+    "lat": 23.9,
+    "region": "壽豐",
+    "kind": "area",
+    "text": "화롄에서 공부하고 생활하는 캠퍼스.",
+    "childMap": {
+      "id": "ndhu-campus",
+      "status": "planned"
+    },
+    "source": "https://sdgs.ndhu.edu.tw/wp-content/uploads/2025/09/CH-NDHU-2024-Sustainability-Report.pdf",
+    "coordinateNote": "壽豐校區 representative coordinate, not the back gate or a campus boundary",
+    "displayOffset": [
+      15,
+      -3
+    ],
+    "labelSide": "right"
   },
   {
     "id": "zhixue-station",
@@ -13,6 +42,64 @@
     "zh": "志學車站",
     "lon": 121.52949,
     "lat": 23.90756,
-    "text": "테스트 기록이야. 작은 역 하나가 생활권과 바깥세계를 이어 주는 지점. 이후에는 이곳에서 출발하거나 돌아온 이동의 기억도 함께 묶어볼 수 있어."
+    "text": "테스트 기록이야. 작은 역 하나가 생활권과 바깥세계를 이어 주는 지점. 이후에는 이곳에서 출발하거나 돌아온 이동의 기억도 함께 묶어볼 수 있어.",
+    "region": "壽豐",
+    "kind": "place",
+    "displayOffset": [
+      -16,
+      29
+    ],
+    "labelSide": "left"
+  },
+  {
+    "id": "ruisui-station",
+    "name": "루이수이 기차역",
+    "zh": "瑞穗車站",
+    "lon": 121.376663,
+    "lat": 23.497733,
+    "region": "瑞穗",
+    "kind": "place",
+    "text": "",
+    "source": "https://deh.csie.ncku.edu.tw/poi_detail/722",
+    "displayOffset": [
+      -13,
+      -23
+    ],
+    "labelSide": "left"
+  },
+  {
+    "id": "ruisui-farmers-market",
+    "name": "루이수이 농회 시장",
+    "zh": "瑞穗鄉農會農民直銷站",
+    "lon": 121.3801233821,
+    "lat": 23.49697996316,
+    "region": "瑞穗",
+    "kind": "place",
+    "text": "",
+    "source": "https://ezgo.ardswc.gov.tw/zh-tw/spot/6699/",
+    "address": "花蓮縣瑞穗鄉中山路一段126號",
+    "displayOffset": [
+      16,
+      13
+    ],
+    "labelSide": "right"
+  },
+  {
+    "id": "wuhe-tea-district",
+    "name": "루이수이 우허 차 지구",
+    "mapName": "우허 차 지구",
+    "zh": "舞鶴茶區",
+    "lon": 121.35462,
+    "lat": 23.447772,
+    "region": "瑞穗",
+    "kind": "area",
+    "text": "",
+    "source": "https://www.taiwan.net.tw/m1.aspx?id=601&print=1&sNo=0001016",
+    "coordinateNote": "Representative point for the tea district; not an area boundary",
+    "displayOffset": [
+      -7,
+      48
+    ],
+    "labelSide": "left"
   }
 ]
