@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#f5f2e9" />
   <title>26 Hualien</title>
-  <link rel="stylesheet" href="./style.css?v=14" />
+  <link rel="stylesheet" href="./style.css?v=15" />
 </head>
 <body>
   <main class="app">
@@ -23,16 +23,21 @@
 
   <dialog id="place-dialog" aria-labelledby="place-name" aria-describedby="place-text">
     <article>
-      <button class="close" aria-label="닫기">×</button>
-      <p id="place-kind" class="eyebrow"></p>
-      <h2 id="place-name"></h2>
-      <div id="place-text"></div>
+      <div class="dialog-toolbar">
+        <button id="dialog-back" class="dialog-back" type="button" hidden>← 목록</button>
+        <button class="close" aria-label="닫기">×</button>
+      </div>
+      <div class="dialog-content">
+        <p id="place-kind" class="eyebrow"></p>
+        <h2 id="place-name"></h2>
+        <div id="place-text"></div>
+      </div>
     </article>
   </dialog>
 
   <script defer src="./map-data.js?v=14"></script>
-  <script defer src="./notes.js?v=14"></script>
+  <script defer src="./notes.js?v=15"></script>
   <script defer src="./neighbor-labels.js?v=14"></script>
-  <script defer src="./app.js?v=14"></script>
+  <script defer src="./app.js?v=15"></script>
 </body>
 </html>
