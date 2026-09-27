@@ -62,6 +62,10 @@ function renderRegion(bounds) {
   }
   element('path',{class:'region-fill selected',d:r.path},land);
   element('path',{class:'town-boundary',d:MAP_DATA.boundaries},land);
+  if(r.id==='shoufeng'){
+    const school=MAP_DATA.regions.find(region=>region.id==='school');
+    element('path',{class:'region-fill school-area',d:school.path,'aria-label':'지학촌 志學村'},land);
+  }
   const places=MAP_DATA.places.filter(p=>p.regionId===r.id);
   const threshold=52*360/svg.getBoundingClientRect().width;
   const groups=[];
