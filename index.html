@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#f5f2e9" />
   <title>26 Hualien</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./style.css?v=6" />
 </head>
 <body>
   <main class="app">
@@ -17,12 +17,12 @@
 
     <section class="map-card" aria-label="경험 지도">
       <button id="back" class="back" hidden>← 대만으로</button>
-      <svg id="map" viewBox="0 0 360 560" role="img" aria-label="대만과 화롄 경험 지도"></svg>
+      <svg id="map" viewBox="0 0 360 560" role="group" aria-label="대만 본섬 지도"></svg>
       <p id="hint" class="hint">연록색 화롄을 눌러 들어가 봐.</p>
     </section>
   </main>
 
-  <dialog id="place-dialog">
+  <dialog id="place-dialog" aria-labelledby="place-name" aria-describedby="place-text">
     <article>
       <button class="close" aria-label="닫기">×</button>
       <p id="place-kind" class="eyebrow"></p>
@@ -31,6 +31,7 @@
     </article>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>\n  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>\n  <script src="./app.js?v=5"></script>
+  <script defer src="./map-data.js?v=6"></script>
+  <script defer src="./app.js?v=6"></script>
 </body>
 </html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>26hualien mobile verification</title>
+<style>
+body{font:14px system-ui;background:#e7e7e2;margin:20px;color:#343a35}main{display:flex;align-items:flex-start;gap:24px}iframe{display:block;border:0;background:#f5f2e9}h1{font-size:18px}h2{font-size:14px}pre{white-space:pre-wrap;max-width:800px}button{padding:10px;margin:16px 0}
+</style>
+<h1>Live mobile viewports · use the map inside each frame</h1>
+<main>
+<section><h2>375 × 812</h2><iframe id="mobile" title="375 pixel mobile viewport" src="../index.html" width="375" height="812"></iframe></section>
+<section><h2>320 × 740</h2><iframe id="small" title="320 pixel mobile viewport" src="../index.html" width="320" height="740"></iframe></section>
+</main>
+<button id="inspect">Inspect layout and network</button><pre id="results">Select Inspect after loading or changing views.</pre>
+<script>
+document.querySelector('#inspect').addEventListener('click', () => {
+  try {
+    const results = [...document.querySelectorAll('iframe')].map(frame => {
+      const w = frame.contentWindow, d = frame.contentDocument;
+      return {viewport: [w.innerWidth,w.innerHeight], title:d.title,
+        view:d.querySelector('#map').dataset.view,
+        horizontalOverflow:d.documentElement.scrollWidth>w.innerWidth,
+        paths:[...d.querySelectorAll('#map path')].map(p=>({class:p.getAttribute('class'),bounds:{x:p.getBBox().x,y:p.getBBox().y,width:p.getBBox().width,height:p.getBBox().height}})),
+        mapButtons:[...d.querySelectorAll('#map [role="button"]')].map(b=>b.getAttribute('aria-label')),
+        requests:w.performance.getEntriesByType('resource').map(r=>({url:r.name,status:r.responseStatus,bytes:r.transferSize,duration:Math.round(r.duration)}))};
+    });
+    document.querySelector('#results').textContent=JSON.stringify(results,null,2);
+  } catch (error) { document.querySelector('#results').textContent=String(error); }
+});
+</script>
+</html>
