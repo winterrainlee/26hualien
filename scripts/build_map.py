@@ -135,6 +135,13 @@ for region in regions:
     x0,y0,x1,y1 = region['bounds']
     k = min(264/(x1-x0),408/(y1-y0))
     tx,ty = 180-k*(x0+x1)/2,302-k*(y0+y1)/2
+    blocked = []
+    for place in places:
+        if place['regionId'] != region['id']:
+            continue
+        px,py = place['point'][0]*k+tx,place['point'][1]*k+ty
+        width = max(len(place.get('mapName',place['name']))*12,len(place['zh'])*10)+8
+        blocked.append([px-14-width if px>180 else px-10,py-20,px+10 if px>180 else px+14+width,py+22])
     labels = []
     for neighbor in neighbors:
         name = neighbor['properties']['TOWNNAME']
@@ -151,6 +158,8 @@ for region in regions:
             center = [sum((a[j]+b[j])*c for (a,b),c in zip(pairs,cross))/(3*total) for j in (0,1)]
             half = len(name)*6+3
             def fits(x,y):
+                if any(x+half>b[0] and x-half<b[2] and y+10>b[1] and y-10<b[3] for b in blocked):
+                    return False
                 return all(inside([x+dx,y+dy],points) for dx,dy in [(0,0),(-half,-9),(half,-9),(-half,9),(half,9)])
             options = [center] if fits(*center) else [[x,y] for x in range(48,313,6) for y in range(88,495,6) if fits(x,y)]
             if options:
