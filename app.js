@@ -32,7 +32,10 @@ function renderHualien(focusId) {
   setView('화롄현 花蓮縣','hualien');
   element('path',{class:'county',d:MAP_DATA.county});
   element('path',{class:'town-boundary',d:MAP_DATA.boundaries});
-  MAP_DATA.regions.forEach(r=>element('path',{class:'region-fill',d:r.path}));
+  // Draw the parent first so Shoufeng cannot cover its nested village.
+  MAP_DATA.regions.filter(r=>r.id!=='school').forEach(r=>element('path',{class:'region-fill',d:r.path}));
+  const school=MAP_DATA.regions.find(r=>r.id==='school');
+  element('path',{class:'region-fill school-area',d:school.path});
   MAP_DATA.regions.forEach(r=>{
     const g=element('g',{class:'region-label',role:'button',tabindex:0,'data-region':r.id,'aria-label':r.name+' '+r.zh+' 열기',transform:`translate(${r.label})`});
     element('rect',{x:-53,y:-26,width:106,height:52,rx:16},g);
@@ -53,6 +56,10 @@ function renderRegion(bounds) {
   setView(r.name+' '+r.zh,r.id); back.textContent=zoomStack.length?'← 지역 전체':'← 화롄현';
   const land=element('g',{transform:`translate(${t.x},${t.y}) scale(${t.k})`});
   element('path',{class:'context-land',d:MAP_DATA.county},land);
+  if(r.id==='school'){
+    const parent=MAP_DATA.regions.find(region=>region.id==='shoufeng');
+    element('path',{class:'parent-outline',d:parent.path,'aria-label':'소우펑 壽豐鄉 외곽선'},land);
+  }
   element('path',{class:'region-fill selected',d:r.path},land);
   element('path',{class:'town-boundary',d:MAP_DATA.boundaries},land);
   const places=MAP_DATA.places.filter(p=>p.regionId===r.id);
