@@ -140,14 +140,32 @@ function openPlace(id) {
   dialog.showModal();
 }
 
+async function loadHualienTowns() {
+  try {
+    const townAtlas = await d3.json(TOWNS_URL);
+    if (!townAtlas?.objects?.towns) throw new Error("Town boundaries missing");
+
+    const towns = topojson.feature(townAtlas, townAtlas.objects.towns);
+    hualienTowns = towns.features.filter(f =>
+      String(f.properties?.COUNTYCODE) === "10015"
+    );
+
+    if (!hualienTowns.length) {
+      throw new Error("No Hualien towns found");
+    }
+
+    // If the user is already on the Hualien view, redraw it with boundaries.
+    if (!back.hidden) renderHualien();
+  } catch (error) {
+    console.warn("Town boundaries unavailable; base map remains usable.", error);
+    hualienTowns = [];
+  }
+}
+
 async function init() {
   try {
     hint.textContent = "지도를 불러오는 중…";
-    const [countyAtlas, townAtlas] = await Promise.all([
-      d3.json(ATLAS_URL),
-      d3.json(TOWNS_URL)
-    ]);
-    atlas = countyAtlas;
+    atlas = await d3.json(ATLAS_URL);
 
     if (!atlas?.objects?.nation || !atlas?.objects?.counties) {
       throw new Error("Taiwan Atlas objects missing");
@@ -155,34 +173,26 @@ async function init() {
 
     nation = topojson.feature(atlas, atlas.objects.nation);
     const counties = topojson.feature(atlas, atlas.objects.counties);
-    hualienCounty = counties.features.find(f => {
-      const p = f.properties || {};
-      return Object.values(p).some(v => String(v).includes("花蓮"));
-    });
+    hualienCounty = counties.features.find(f =>
+      String(f.properties?.COUNTYCODE) === "10015"
+    );
 
-    if (!hualienCounty) throw new Error("Hualien county not found");
-
-    if (!townAtlas?.objects?.towns) throw new Error("Town boundaries missing");
-    const towns = topojson.feature(townAtlas, townAtlas.objects.towns);
-    hualienTowns = towns.features.filter(f => {
-      const p = f.properties || {};
-      return Object.values(p).some(v => String(v).includes("花蓮縣"));
-    });
-
-    if (!hualienTowns.length) {
-      // Some atlas versions store county affiliation as a code rather than a name.
-      // Keep towns whose representative point lies inside Hualien County.
-      hualienTowns = towns.features.filter(f =>
-        d3.geoContains(hualienCounty, d3.geoCentroid(f))
+    if (!hualienCounty) {
+      // Compatibility fallback for atlas variants.
+      hualienCounty = counties.features.find(f =>
+        String(f.properties?.COUNTYNAME || "").includes("花蓮")
       );
     }
 
-    if (!hualienTowns.length) throw new Error("Hualien town boundaries not found");
+    if (!hualienCounty) throw new Error("Hualien county not found");
+
+    // Render the known-good map first. Town boundaries must never block it.
     renderTaiwan();
+    loadHualienTowns();
   } catch (error) {
-    console.error(error);
+    console.error("Base map failed:", error);
     svg.selectAll("*").remove();
-    hint.textContent = "지도 데이터를 불러오지 못했어.";
+    hint.textContent = "기본 지도 데이터를 불러오지 못했어.";
   }
 }
 
