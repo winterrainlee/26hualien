@@ -57,11 +57,12 @@ function taiwan(){
  hint.textContent="연록색 화롄을 눌러 들어가 봐.";
  if(!geo){svg.innerHTML="";return}
  const fs=mainIslandFeatures();
- const project=projector(bounds(fs),48);
- svg.innerHTML=fs.map(f=>{
-   const isH=f.properties.county==="花蓮縣";
-   return `<path class="${isH?"hualien":"land"}" ${isH?'tabindex="0" role="button" aria-label="화롄현 열기"':""} d="${pathFor(f,project)}"/>`;
- }).join("")+`<text class="label hualien-label" x="232" y="272">花蓮</text>`;
+ const project=projector([[{geometry:{type:"Polygon",coordinates:[[[120.0,21.85],[121.9,21.85],[121.9,25.35],[120.0,25.35],[120.0,21.85]]]},properties:{}}]],48);
+ const hf=geo.features.find(v=>v.properties.county==="花蓮縣");
+ svg.innerHTML=`
+   <path class="land" d="${taiwanCoastPath(project)}"/>
+   <path class="hualien" tabindex="0" role="button" aria-label="화롄현 열기" d="${pathFor(hf,project)}"/>
+   <text class="label hualien-label" x="232" y="270">花蓮</text>`;
  const h=svg.querySelector(".hualien");
  h.addEventListener("click",hualien);
  h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hualien()}});
