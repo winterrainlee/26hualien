@@ -1,104 +1,172 @@
-const svg=document.querySelector("#map");
-const title=document.querySelector("#title");
-const subtitle=document.querySelector("#subtitle");
-const hint=document.querySelector("#hint");
-const back=document.querySelector("#back");
-const dialog=document.querySelector("#place-dialog");
+const svg = d3.select("#map");
+const title = document.querySelector("#title");
+const subtitle = document.querySelector("#subtitle");
+const hint = document.querySelector("#hint");
+const back = document.querySelector("#back");
+const dialog = document.querySelector("#place-dialog");
 
-const GEO_URL="https://raw.githubusercontent.com/ronnywang/twgeojson/master/twcounty2010.2.json";
-let geo=null;
+const ATLAS_URL = "https://cdn.jsdelivr.net/npm/taiwan-atlas@2021.9.20/counties-10t.json";
+let atlas;
+let nation;
+let hualienCounty;
 
-const places=[
- {id:"ndhu-back-gate",name:"동화대학 후문",zh:"東華大學後門",lon:121.537278,lat:23.905151,text:"테스트 기록이야. 자전거로 학교와 지학을 오가며 자주 지나게 되는 경계. 나중에는 이곳에 실제 경험과 사진을 차곡차곡 연결할 수 있어."},
- {id:"zhixue-station",name:"지학역",zh:"志學車站",lon:121.52949,lat:23.90756,text:"테스트 기록이야. 작은 역 하나가 생활권과 바깥세계를 이어 주는 지점. 이후에는 이곳에서 출발하거나 돌아온 이동의 기억도 함께 묶어볼 수 있어."}
+const places = [
+  {
+    id: "ndhu-back-gate",
+    name: "동화대학 후문",
+    zh: "東華大學後門",
+    lon: 121.537278,
+    lat: 23.905151,
+    text: "테스트 기록이야. 자전거로 학교와 지학을 오가며 자주 지나게 되는 경계. 나중에는 이곳에 실제 경험과 사진을 차곡차곡 연결할 수 있어."
+  },
+  {
+    id: "zhixue-station",
+    name: "지학역",
+    zh: "志學車站",
+    lon: 121.52949,
+    lat: 23.90756,
+    text: "테스트 기록이야. 작은 역 하나가 생활권과 바깥세계를 이어 주는 지점. 이후에는 이곳에서 출발하거나 돌아온 이동의 기억도 함께 묶어볼 수 있어."
+  }
 ];
 
-const validRing=r=>r.length>=4 && new Set(r.map(p=>p.join(","))).size>=3;
-const rings=f=>{
- const g=f.geometry;
- if(g.type==="Polygon") return g.coordinates.filter(validRing);
- if(g.type==="MultiPolygon") return g.coordinates.flat().filter(validRing);
- return [];
-};
-const bounds=features=>{
- const pts=features.flatMap(f=>rings(f).flat());
- return [Math.min(...pts.map(p=>p[0])),Math.min(...pts.map(p=>p[1])),Math.max(...pts.map(p=>p[0])),Math.max(...pts.map(p=>p[1]))];
-};
-function projector(b,pad=35){
- const [minX,minY,maxX,maxY]=b,w=360,h=560;
- const s=Math.min((w-pad*2)/(maxX-minX),(h-pad*2)/(maxY-minY));
- const ox=(w-(maxX-minX)*s)/2, oy=(h-(maxY-minY)*s)/2;
- return ([x,y])=>[ox+(x-minX)*s,oy+(maxY-y)*s];
-}
-function pathFor(f,project){
- return rings(f).map(r=>r.map((p,i)=>{const [x,y]=project(p);return `${i?"L":"M"}${x.toFixed(1)},${y.toFixed(1)}`}).join(" ")+" Z").join(" ");
-}
-function mainIslandFeatures(){
- return geo.features.filter(f=>{
-   const b=bounds([f]);
-   return b[0]>119.9 && b[2]<122.1 && b[1]>21.7 && b[3]<25.5;
- });
-}
-async function loadGeo(){
- try{
-   const r=await fetch(GEO_URL);
-   if(!r.ok) throw new Error("map data");
-   geo=await r.json();
-   taiwan();
- }catch(e){
-   hint.textContent="지도 데이터를 불러오지 못했어. 새로고침해 봐.";
- }
+function setText(main, sub, help) {
+  title.textContent = main;
+  subtitle.textContent = sub;
+  hint.textContent = help;
 }
 
-function taiwan(){
- back.hidden=true;
- title.textContent="화롄에서 보낸 세 달";
- subtitle.textContent="대만 동부에서 내가 지나고 머문 공간의 기록.";
- hint.textContent="연록색 화롄을 눌러 들어가 봐.";
- if(!geo){svg.innerHTML="";return}
- const fs=mainIslandFeatures();
- const project=projector([[{geometry:{type:"Polygon",coordinates:[[[120.0,21.85],[121.9,21.85],[121.9,25.35],[120.0,25.35],[120.0,21.85]]]},properties:{}}]],48);
- const hf=geo.features.find(v=>v.properties.county==="花蓮縣");
- svg.innerHTML=`
-   <path class="land" d="${taiwanCoastPath(project)}"/>
-   <path class="hualien" tabindex="0" role="button" aria-label="화롄현 열기" d="${pathFor(hf,project)}"/>
-   <text class="label hualien-label" x="232" y="270">花蓮</text>`;
- const h=svg.querySelector(".hualien");
- h.addEventListener("click",hualien);
- h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hualien()}});
+function projectionFor(feature, padding = 42) {
+  return d3.geoMercator().fitExtent(
+    [[padding, padding], [360 - padding, 560 - padding]],
+    feature
+  );
 }
 
-function hualien(){
- back.hidden=false;
- title.textContent="화롄현";
- subtitle.textContent="아직은 두 개의 점뿐. 여기서부터 경험이 쌓여 간다.";
- hint.textContent="점을 누르면 장소의 테스트 기록이 열려.";
- const f=geo.features.find(v=>v.properties.county==="花蓮縣");
- const b=bounds([f]);
- const project=projector(b,45);
- const [lx,ly]=project([121.52,24.22]);
- svg.innerHTML=`<path class="county" d="${pathFor(f,project)}"/><text class="label" x="${lx}" y="${ly}">花蓮縣</text>`+
- places.map((p,i)=>{
-   const [x,y]=project([p.lon,p.lat]);
-   const dy=i===0?-8:22;
-   return `<g class="place" tabindex="0" role="button" aria-label="${p.name}" data-id="${p.id}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="8"/><text x="14" y="${dy}">${p.name}</text><text class="sub" x="14" y="${dy+14}">${p.zh}</text></g>`;
- }).join("");
- svg.querySelectorAll(".place").forEach(el=>{
-   const open=()=>openPlace(el.dataset.id);
-   el.addEventListener("click",open);
-   el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
- });
+function renderTaiwan() {
+  back.hidden = true;
+  setText(
+    "화롄에서 보낸 세 달",
+    "대만 동부에서 내가 지나고 머문 공간의 기록.",
+    "연록색 화롄을 눌러 들어가 봐."
+  );
+
+  const projection = projectionFor(nation, 52);
+  const path = d3.geoPath(projection);
+  svg.selectAll("*").remove();
+
+  svg.append("path")
+    .datum(nation)
+    .attr("class", "land")
+    .attr("d", path);
+
+  const h = svg.append("path")
+    .datum(hualienCounty)
+    .attr("class", "hualien")
+    .attr("d", path)
+    .attr("tabindex", 0)
+    .attr("role", "button")
+    .attr("aria-label", "화롄현 열기");
+
+  const labelPoint = projection([121.47, 23.75]);
+  svg.append("text")
+    .attr("class", "label")
+    .attr("x", labelPoint[0])
+    .attr("y", labelPoint[1])
+    .text("花蓮");
+
+  h.on("click", renderHualien)
+   .on("keydown", event => {
+     if (event.key === "Enter" || event.key === " ") {
+       event.preventDefault();
+       renderHualien();
+     }
+   });
 }
 
-function openPlace(id){
- const p=places.find(v=>v.id===id);
- document.querySelector("#place-kind").textContent="PLACE · 壽豐";
- document.querySelector("#place-name").textContent=`${p.name} · ${p.zh}`;
- document.querySelector("#place-text").textContent=p.text;
- dialog.showModal();
+function renderHualien() {
+  back.hidden = false;
+  setText(
+    "화롄현",
+    "아직은 두 개의 점뿐. 여기서부터 경험이 쌓여 간다.",
+    "점을 누르면 장소의 테스트 기록이 열려."
+  );
+
+  const projection = projectionFor(hualienCounty, 42);
+  const path = d3.geoPath(projection);
+  svg.selectAll("*").remove();
+
+  svg.append("path")
+    .datum(hualienCounty)
+    .attr("class", "county")
+    .attr("d", path);
+
+  const labelPoint = projection([121.38, 24.15]);
+  svg.append("text")
+    .attr("class", "label")
+    .attr("x", labelPoint[0])
+    .attr("y", labelPoint[1])
+    .text("花蓮縣");
+
+  places.forEach((p, i) => {
+    const [x, y] = projection([p.lon, p.lat]);
+    const g = svg.append("g")
+      .attr("class", "place")
+      .attr("transform", `translate(${x},${y})`)
+      .attr("tabindex", 0)
+      .attr("role", "button")
+      .attr("aria-label", p.name)
+      .on("click", () => openPlace(p.id))
+      .on("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openPlace(p.id);
+        }
+      });
+
+    g.append("circle").attr("r", 8);
+    const dy = i === 0 ? -9 : 25;
+    g.append("text").attr("x", 14).attr("y", dy).text(p.name);
+    g.append("text").attr("class", "sub").attr("x", 14).attr("y", dy + 14).text(p.zh);
+  });
 }
-back.addEventListener("click",taiwan);
-dialog.querySelector(".close").addEventListener("click",()=>dialog.close());
-dialog.addEventListener("click",e=>{if(e.target===dialog) dialog.close()});
-hint.textContent="지도를 불러오는 중…";
-loadGeo();
+
+function openPlace(id) {
+  const p = places.find(v => v.id === id);
+  document.querySelector("#place-kind").textContent = "PLACE · 壽豐";
+  document.querySelector("#place-name").textContent = `${p.name} · ${p.zh}`;
+  document.querySelector("#place-text").textContent = p.text;
+  dialog.showModal();
+}
+
+async function init() {
+  try {
+    hint.textContent = "지도를 불러오는 중…";
+    atlas = await d3.json(ATLAS_URL);
+
+    if (!atlas?.objects?.nation || !atlas?.objects?.counties) {
+      throw new Error("Taiwan Atlas objects missing");
+    }
+
+    nation = topojson.feature(atlas, atlas.objects.nation);
+    const counties = topojson.feature(atlas, atlas.objects.counties);
+    hualienCounty = counties.features.find(f => {
+      const p = f.properties || {};
+      return Object.values(p).some(v => String(v).includes("花蓮"));
+    });
+
+    if (!hualienCounty) throw new Error("Hualien county not found");
+    renderTaiwan();
+  } catch (error) {
+    console.error(error);
+    svg.selectAll("*").remove();
+    hint.textContent = "지도 데이터를 불러오지 못했어.";
+  }
+}
+
+back.addEventListener("click", renderTaiwan);
+dialog.querySelector(".close").addEventListener("click", () => dialog.close());
+dialog.addEventListener("click", event => {
+  if (event.target === dialog) dialog.close();
+});
+
+init();
