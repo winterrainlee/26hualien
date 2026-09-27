@@ -46,3 +46,9 @@ GitHub Pages: `main / root`. 빌드 서버나 npm 설치가 필요 없다.
 `data/places.json`의 `source`에 각 장소 출처를 보존했다. 화롄·루이수이 역은 성공대 문사맥류 자료, 농회 시장은 농업이지유의 중산로 126호 농회 신선식품·농산물 매장 지도 좌표, 우허 차 지구는 관공서의 舞鶴觀光茶園 대표 좌표를 사용했다. 동화대학은 대학 지속가능성 보고서의 壽豐校區 대표 좌표(121.55, 23.90)를 사용한다. 구역 대표점은 정확한 영역 경계라는 의미가 아니다.
 
 志學村 경계는 같은 버전의 `villages-10t.json`에서 VILLCODE=10015060011을 추출한 `data/zhixue.geojson`이다. 출처 URL은 GeoJSON properties에 보존한다.
+
+## 지역 노트와 아이콘
+
+`notes.js`의 `REGION_NOTES`는 장소와 별도로 관리하며 `regionIds`의 현재 범주에 연결된 노트만 센다. 우하단 노트 수 버튼을 누르면 불렛 목록을 연다. 현재 루이수이의 세 항목은 테스트용이며 다른 지역은 0개다.
+
+기차 아이콘은 [Lucide train-front](https://lucide.dev/icons/train-front)의 SVG를 2026-09-27에 받아 색상만 변경했다. 원본은 https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/train-front.svg 이며 라이선스는 `assets/LICENSE-lucide.txt`에 보존한다.

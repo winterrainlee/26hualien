@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#f5f2e9" />
   <title>26 Hualien</title>
-  <link rel="stylesheet" href="./style.css?v=11" />
+  <link rel="stylesheet" href="./style.css?v=12" />
 </head>
 <body>
   <main class="app">
@@ -17,6 +17,7 @@
     <section class="map-card" aria-label="경험 지도">
       <button id="back" class="back" hidden>← 대만으로</button>
       <svg id="map" viewBox="0 0 360 560" role="group" aria-label="대만 본섬 지도"></svg>
+      <button id="region-notes" class="region-notes" aria-haspopup="dialog" hidden></button>
     </section>
   </main>
 
@@ -25,11 +26,12 @@
       <button class="close" aria-label="닫기">×</button>
       <p id="place-kind" class="eyebrow"></p>
       <h2 id="place-name"></h2>
-      <p id="place-text"></p>
+      <div id="place-text"></div>
     </article>
   </dialog>
 
-  <script defer src="./map-data.js?v=11"></script>
-  <script defer src="./app.js?v=11"></script>
+  <script defer src="./map-data.js?v=12"></script>
+  <script defer src="./notes.js?v=12"></script>
+  <script defer src="./app.js?v=12"></script>
 </body>
 </html>

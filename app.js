@@ -3,6 +3,7 @@ const svg = document.querySelector('#map');
 const title = document.querySelector('#title');
 const back = document.querySelector('#back');
 const dialog = document.querySelector('#place-dialog');
+const notesButton = document.querySelector('#region-notes');
 const NS = 'http://www.w3.org/2000/svg';
 let activePlace, currentRegion, zoomBounds;
 let zoomStack = [];
@@ -17,6 +18,7 @@ function activate(el, callback) {
   el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') {e.preventDefault(); callback();} });
 }
 function setView(main, view) {
+  notesButton.hidden = true;
   title.textContent = main; svg.replaceChildren(); svg.dataset.view = view;
   svg.setAttribute('aria-label', main + ' 지도');
 }
@@ -36,11 +38,16 @@ function renderHualien(focusId) {
   MAP_DATA.regions.filter(r=>r.id!=='school').forEach(r=>element('path',{class:'region-fill',d:r.path}));
   const school=MAP_DATA.regions.find(r=>r.id==='school');
   element('path',{class:'region-fill school-area',d:school.path});
+  element('line',{class:'school-connector',x1:school.label[0]+53,y1:school.label[1],x2:(school.bounds[0]+school.bounds[2])/2,y2:(school.bounds[1]+school.bounds[3])/2,'aria-hidden':'true'});
   MAP_DATA.regions.forEach(r=>{
     const g=element('g',{class:'region-label',role:'button',tabindex:0,'data-region':r.id,'aria-label':r.name+' '+r.zh+' 열기',transform:`translate(${r.label})`});
     element('rect',{x:-53,y:-26,width:106,height:52,rx:16},g);
     element('text',{'text-anchor':'middle',y:-3},g,r.name);
     element('text',{class:'sub','text-anchor':'middle',y:15},g,r.zh);
+    if(r.id==='ruisui'){
+      element('image',{class:'travel-icon',href:'./assets/train-front.svg',x:61,y:-12,width:24,height:24,'aria-hidden':'true'},g);
+      g.setAttribute('aria-label',r.name+' '+r.zh+' 열기 · 기차로 방문');
+    }
     activate(g,()=>{currentRegion=r;zoomStack=[];renderRegion(r.bounds);back.focus();});
     if(r.id===focusId)g.focus();
   });
@@ -54,6 +61,9 @@ function screenPoint(p,t){return [p.point[0]*t.k+t.x,p.point[1]*t.k+t.y];}
 function renderRegion(bounds) {
   zoomBounds=bounds; const r=currentRegion,t=fit(bounds);
   setView(r.name+' '+r.zh,r.id); back.textContent=zoomStack.length?'← 지역 전체':'← 화롄현';
+  const notes=REGION_NOTES.filter(note=>note.regionIds.includes(r.id));
+  notesButton.textContent=`${r.name} 노트 ${notes.length}개`;
+  notesButton.hidden=false;
   const land=element('g',{transform:`translate(${t.x},${t.y}) scale(${t.k})`});
   element('path',{class:'context-land',d:MAP_DATA.county},land);
   if(r.id==='school'){
@@ -105,16 +115,31 @@ function renderRegion(bounds) {
   });
 }
 function openChoices(places,trigger){
+  document.querySelector('#place-kind').hidden=false;
   activePlace=trigger;document.querySelector('#place-kind').textContent=currentRegion.name;
   document.querySelector('#place-name').textContent='장소 선택';
   const body=document.querySelector('#place-text');body.replaceChildren();
   places.forEach(p=>{const b=document.createElement('button');b.textContent=p.name+' · '+p.zh;b.onclick=()=>{dialog.close();openPlace(p,trigger);};body.append(b);});dialog.showModal();
 }
 function openPlace(place,trigger){
+  document.querySelector('#place-kind').hidden=false;
   activePlace=trigger;document.querySelector('#place-kind').textContent=place.region;
   document.querySelector('#place-name').textContent=place.name+' · '+place.zh;
   document.querySelector('#place-text').textContent=place.text||'아직 기록이 없어.';dialog.showModal();
 }
+notesButton.addEventListener('click',()=>{
+  activePlace=notesButton;
+  const notes=REGION_NOTES.filter(note=>note.regionIds.includes(currentRegion.id));
+  document.querySelector('#place-kind').hidden=true;
+  document.querySelector('#place-name').textContent=`${currentRegion.name} 노트 ${notes.length}개`;
+  const body=document.querySelector('#place-text');body.replaceChildren();
+  if(notes.length){
+    const list=document.createElement('ul');list.className='note-list';
+    notes.forEach(note=>{const item=document.createElement('li');item.textContent=note.title;list.append(item);});
+    body.append(list);
+  }else body.textContent='아직 노트가 없어.';
+  dialog.showModal();
+});
 back.addEventListener('click',()=>{
   if(currentRegion){if(zoomStack.length)renderRegion(zoomStack.pop());else renderHualien(currentRegion.id);}
   else renderTaiwan(true);
