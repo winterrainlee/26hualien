@@ -80,6 +80,7 @@ function renderRegion(bounds) {
       const left=x>180,lx=left?-14:14,anchor=left?'end':'start';
       const box=[left?x-14-width:x+14,y-18,width,38];
       if(box[0]>=4&&box[0]+width<=356&&!occupied.some(b=>box[0]<b[0]+b[2]&&box[0]+box[2]>b[0]&&box[1]<b[1]+b[3]&&box[1]+box[3]>b[1])) {
+        element('rect',{class:'place-hit',x:left?-14-width:-threshold/2,y:-20,width:width+14+threshold/2,height:40},g);
         element('text',{x:lx,y:-3,'text-anchor':anchor},g,label);
         element('text',{class:'sub',x:lx,y:14,'text-anchor':anchor},g,p.zh);occupied.push(box);
       }
