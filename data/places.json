@@ -77,5 +77,21 @@
     "source": "https://www.taiwan.net.tw/m1.aspx?id=601&print=1&sNo=0001016",
     "coordinateNote": "Representative point for the tea district; not an area boundary",
     "regionId": "ruisui"
+  },
+  {
+    "id": "zhixue-new-village",
+    "name": "지학신촌(오백호)",
+    "mapName": "지학신촌",
+    "zh": "志學新邨（伍佰戶）",
+    "lon": 121.52505,
+    "lat": 23.90078,
+    "region": "志學村",
+    "kind": "area",
+    "text": "",
+    "source": "https://sites.google.com/view/donghawnewage/%E9%97%9C%E6%96%BC%E7%A4%BE%E5%8D%80/%E7%A4%BE%E5%8D%80%E6%AD%B7%E5%8F%B2",
+    "address": "974花蓮縣壽豐鄉志學新邨179號",
+    "coordinateSource": "https://mapcarta.com/W197938562",
+    "coordinateNote": "Representative point at 志學新邨籃球場, where the 2026-09-28 neighborhood dinner took place; not a community boundary.",
+    "regionId": "school"
   }
 ]
