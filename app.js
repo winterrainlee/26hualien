@@ -161,12 +161,22 @@ function renderNoteList(){
   });
   body.append(list);
 }
+function appendInlineMarkdown(parent,text){
+  const pattern=/\\*\\*([^*\\n]+)\\*\\*/g;
+  let cursor=0,match;
+  while((match=pattern.exec(text))){
+    if(match.index>cursor)parent.append(document.createTextNode(text.slice(cursor,match.index)));
+    const strong=document.createElement('strong');strong.textContent=match[1];parent.append(strong);
+    cursor=pattern.lastIndex;
+  }
+  if(cursor<text.length)parent.append(document.createTextNode(text.slice(cursor)));
+}
 function renderNoteBody(note){
   const body=document.querySelector('#place-text');body.replaceChildren();
   const content=(note.body||'').trim();
   if(!content){body.textContent='아직 내용이 없어.';return;}
   content.split(/\n\s*\n/).forEach(block=>{
-    const p=document.createElement('p');p.className='note-paragraph';p.textContent=block.trim();body.append(p);
+    const p=document.createElement('p');p.className='note-paragraph';appendInlineMarkdown(p,block.trim());body.append(p);
   });
 }
 function openNote(note){
