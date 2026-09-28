@@ -162,7 +162,7 @@ function renderNoteList(){
   body.append(list);
 }
 function appendInlineMarkdown(parent,text){
-  const pattern=/\\*\\*([^*\\n]+)\\*\\*/g;
+  const pattern=/\*\*([^*\n]+)\*\*/g;
   let cursor=0,match;
   while((match=pattern.exec(text))){
     if(match.index>cursor)parent.append(document.createTextNode(text.slice(cursor,match.index)));
