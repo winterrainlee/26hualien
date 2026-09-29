@@ -19,7 +19,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     outputs:
-      pages_workflow: ${{ steps.pages-source.outputs.enabled }}
+      pages_workflow: ${{ steps.pages_source.outputs.enabled }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -40,7 +40,7 @@ jobs:
 
       - name: Detect Pages publishing source
         if: github.event_name != 'pull_request'
-        id: pages-source
+        id: pages_source
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -59,13 +59,7 @@ jobs:
             echo "::warning::Could not read GitHub Pages settings (HTTP $status). Verification passed, deployment skipped."
             exit 0
           fi
-          build_type="$(python3 - "$tmp" <<'PY'
-import json
-import sys
-with open(sys.argv[1], encoding="utf-8") as handle:
-    print(json.load(handle).get("build_type", ""))
-PY
-          )"
+          build_type="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("build_type", ""))' "$tmp")"
           if [ "$build_type" = "workflow" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
@@ -74,11 +68,11 @@ PY
           fi
 
       - name: Configure GitHub Pages
-        if: github.event_name != 'pull_request' && steps.pages-source.outputs.enabled == 'true'
+        if: github.event_name != 'pull_request' && steps.pages_source.outputs.enabled == 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request' && steps.pages-source.outputs.enabled == 'true'
+        if: github.event_name != 'pull_request' && steps.pages_source.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
