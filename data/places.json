@@ -7,7 +7,7 @@
     "lat": 23.992637,
     "region": "花蓮市",
     "kind": "place",
-    "text": "",
+    "text": "화롄에서 처음 도착한 곳. 버스터미널도 바로 옆에 있어서 다른 지역으로의 이동이 편하다",
     "source": "https://deh.csie.ncku.edu.tw/poi_detail/709",
     "regionId": "city"
   },
@@ -19,7 +19,7 @@
     "lat": 23.9,
     "region": "志學村",
     "kind": "area",
-    "text": "화롄에서 공부하고 생활하는 캠퍼스.",
+    "text": "26년 가을 연수 장소이자 생활 거점",
     "childMap": {
       "id": "ndhu-campus",
       "status": "planned"
@@ -34,7 +34,7 @@
     "zh": "志學車站",
     "lon": 121.52949,
     "lat": 23.90756,
-    "text": "테스트 기록이야. 작은 역 하나가 생활권과 바깥세계를 이어 주는 지점. 이후에는 이곳에서 출발하거나 돌아온 이동의 기억도 함께 묶어볼 수 있어.",
+    "text": "학교 후문 근처에 있는 작은 기차역으로, 자주는 아니지만 기차가 선다.",
     "region": "志學村",
     "kind": "place",
     "regionId": "school"
