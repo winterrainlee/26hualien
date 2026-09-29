@@ -64,13 +64,25 @@ node --check app.js
 
 ## 검증
 
+로컬과 CI는 같은 진입점인 `scripts/check.sh`를 사용한다.
+
+```sh
+sh scripts/check.sh
+```
+
+이 명령은 지도·노트 생성물을 다시 만든 뒤 `map-data.js`, `neighbor-labels.js`, `notes.js`가 원본과 일치하는지 `git diff --exit-code`로 검사한다. 이어서 모든 JavaScript 파일을 `node --check`로 파싱 검사하고, 배포용 `_site/`도 생성한다. 생성물이 오래됐거나 JavaScript 파싱이 실패하면 즉시 종료한다.
+
 `tests/mobile.html`은 실제 페이지를 375×812 및 320×740 CSS 픽셀의 iframe viewport에 로드한다. 배포 후 이 페이지에서 첫 화면 → 화롄 → 각각의 장소 → 닫기 → 대만으로 흐름을 직접 확인한다. `Inspect layout and network`는 실제 자식 문서의 viewport, 넘침, 경계 크기, 클릭 대상, Resource Timing의 요청 상태를 표시한다. 로컬 `file:`에서는 보안 정책으로 이 진단 버튼만 제한될 수 있다. 브라우저 콘솔 오류도 별도로 확인한다.
 
-2026-09-27 장애 원인은 `app.js`의 `let hualienCounty;\\nlet ...`처럼 코드에 들어간 리터럴 역슬래시+n으로 인한 구문 오류였다. `index.html`에도 같은 문자가 있었다. 이전의 오류 복구 처리보다 먼저 파싱이 실패해 빈 SVG만 표시됐다.
+2026-09-27 장애 원인은 `app.js`의 `let hualienCounty;\\nlet ...`처럼 코드에 들어간 리터럴 역슬래시+n으로 인한 구문 오류였다. 오류 복구 코드보다 먼저 파싱이 실패해 빈 SVG만 표시됐다. 현재는 `.github/workflows/verify-and-deploy.yml`이 push와 pull request마다 생성물 일치 및 JavaScript 파싱을 자동 검증한다.
 
 ## 배포
 
-GitHub Pages: `main / root`. 빌드 서버나 npm 설치가 필요 없다.
+`scripts/build_site.py`가 `_site/`에 배포본을 만들며, 핵심 CSS/JS와 로컬 SVG 내용을 해시해 자동 캐시 버전을 붙인다. 따라서 소스 `index.html`과 `tests/mobile.html`에서는 `?v=` 값을 사람이 관리하지 않는다.
+
+GitHub Pages는 **GitHub Actions**를 publishing source로 사용한다. Actions workflow는 검증이 성공한 경우에만 `_site/` artifact를 배포한다. 저장소가 아직 기존 `main / root` 방식이면 workflow가 이를 감지해 배포만 건너뛰고 경고한다. 이 경우 저장소의 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 한 번 선택하면 이후 push부터 검증 후 자동 배포된다.
+
+빌드 서버나 npm 설치는 필요 없고 Python 표준 라이브러리와 Node.js 파싱 검사만 사용한다.
 
 ## 장소 좌표 출처
 
