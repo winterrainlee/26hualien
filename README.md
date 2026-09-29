@@ -4,7 +4,7 @@
 
 ## 설계 기준
 
-[지역 탐색과 기록 구성 원칙](docs/map-design-principles.md)에 이후 구현 기준을 정리했다. 학교·시가지·소우펑·루이수이로 시작하고, 여행지가 늘어나면 지역을 추가한다. 네 지역의 실제 행정경계 확대와 장소 탐색을 구현했다.
+[지역 탐색과 기록 구성 원칙](docs/map-design-principles.md)에 이후 구현 기준을 정리했다. [기술 구조와 배포 결정](docs/technical-architecture.md)에는 현재 기술 스택, 원본·생성물 관계, 검증 및 GitHub Pages 배포 방식을 기록한다. 학교·시가지·소우펑·루이수이로 시작하고, 여행지가 늘어나면 지역을 추가한다. 네 지역의 실제 행정경계 확대와 장소 탐색을 구현했다.
 
 ## 현재 시제품
 
@@ -80,7 +80,7 @@ sh scripts/check.sh
 
 `scripts/build_site.py`가 `_site/`에 배포본을 만들며, 핵심 CSS/JS와 로컬 SVG 내용을 해시해 자동 캐시 버전을 붙인다. 따라서 소스 `index.html`과 `tests/mobile.html`에서는 `?v=` 값을 사람이 관리하지 않는다.
 
-GitHub Pages는 **GitHub Actions**를 publishing source로 사용한다. Actions workflow는 검증이 성공한 경우에만 `_site/` artifact를 배포한다. 저장소가 아직 기존 `main / root` 방식이면 workflow가 이를 감지해 배포만 건너뛰고 경고한다. 이 경우 저장소의 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 한 번 선택하면 이후 push부터 검증 후 자동 배포된다.
+GitHub Pages는 **GitHub Actions**를 publishing source로 사용한다. Actions workflow는 검증이 성공한 경우에만 `_site/` artifact를 배포한다. 기존 `main / root` legacy 설정이 남아 있으면 workflow가 Pages API를 통해 `workflow` 방식으로 전환한 뒤 배포한다.
 
 빌드 서버나 npm 설치는 필요 없고 Python 표준 라이브러리와 Node.js 파싱 검사만 사용한다.
 

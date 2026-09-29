@@ -38,7 +38,7 @@ jobs:
       - name: Verify generated files and syntax
         run: sh scripts/check.sh
 
-      - name: Detect Pages publishing source
+      - name: Ensure Pages uses GitHub Actions
         if: github.event_name != 'pull_request'
         id: pages_source
         shell: bash
@@ -51,21 +51,35 @@ jobs:
             curl -sS -o "$tmp" -w '%{http_code}' \
               -H 'Accept: application/vnd.github+json' \
               -H "Authorization: Bearer $GH_TOKEN" \
-              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
               "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages"
           )"
           if [ "$status" != "200" ]; then
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Could not read GitHub Pages settings (HTTP $status). Verification passed, deployment skipped."
-            exit 0
+            echo "::error::Could not read GitHub Pages settings (HTTP $status)."
+            exit 1
           fi
+
           build_type="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("build_type", ""))' "$tmp")"
-          if [ "$build_type" = "workflow" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Pages source is '$build_type', not 'workflow'. Set Settings > Pages > Source to GitHub Actions; deployment is skipped until then."
+          if [ "$build_type" != "workflow" ]; then
+            status="$(
+              curl -sS -o "$tmp" -w '%{http_code}' -X PUT \
+                -H 'Accept: application/vnd.github+json' \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H 'X-GitHub-Api-Version: 2026-03-10' \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages" \
+                -d '{"build_type":"workflow"}'
+            )"
+            if [ "$status" != "204" ]; then
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "::error::Could not switch GitHub Pages to Actions (HTTP $status)."
+              cat "$tmp"
+              exit 1
+            fi
+            echo "Switched GitHub Pages publishing source from '$build_type' to 'workflow'."
           fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request' && steps.pages_source.outputs.enabled == 'true'
