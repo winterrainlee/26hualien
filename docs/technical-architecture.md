@@ -169,7 +169,14 @@ GitHub Pages
 
 검증에 실패하면 deploy job은 실행되지 않는다.
 
-GitHub Pages publishing source는 `workflow`를 사용한다. workflow는 기존 `legacy` 설정을 발견하면 GitHub Pages API로 `build_type: workflow` 전환을 수행하고, 이후부터는 이미 설정된 값을 그대로 사용한다.
+GitHub Pages publishing source는 `workflow`를 사용하기로 결정했다. 다만 publishing source 변경은 저장소 관리자 수준의 설정이다. 현재 연결된 GitHub integration과 workflow의 `GITHUB_TOKEN`으로 API 전환을 시도했을 때 GitHub가 `403 Resource not accessible by integration`을 반환했다. 따라서 **Settings → Pages → Build and deployment → Source → GitHub Actions**에서 한 번 수동 전환한다. workflow는 매 실행마다 현재 `build_type`을 확인하고, `workflow`이면 artifact 배포를 진행하며 `legacy`이면 검증만 성공시킨 뒤 배포를 건너뛴다.
+
+
+### 전환 권한에 대한 기록
+
+2026-09-29 자동 전환을 시도했으나 GitHub Pages API의 `PUT /repos/{owner}/{repo}/pages` 요청이 `403 Resource not accessible by integration`으로 거부됐다. GitHub 문서상 Pages 설정 변경은 Pages write 권한을 요구하지만, 이 프로젝트에서 사용하는 integration token에는 저장소 관리자 설정을 바꿀 수 있는 권한이 주어지지 않았다.
+
+따라서 이 설정 하나만 저장소 관리자 UI에서 수행하고, 이후 검증·빌드·배포는 모두 Actions가 담당한다.
 
 ## 7. 왜 GitHub Actions를 선택했는가
 

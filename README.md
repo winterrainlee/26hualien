@@ -80,7 +80,7 @@ sh scripts/check.sh
 
 `scripts/build_site.py`가 `_site/`에 배포본을 만들며, 핵심 CSS/JS와 로컬 SVG 내용을 해시해 자동 캐시 버전을 붙인다. 따라서 소스 `index.html`과 `tests/mobile.html`에서는 `?v=` 값을 사람이 관리하지 않는다.
 
-GitHub Pages는 **GitHub Actions**를 publishing source로 사용한다. Actions workflow는 검증이 성공한 경우에만 `_site/` artifact를 배포한다. 기존 `main / root` legacy 설정이 남아 있으면 workflow가 Pages API를 통해 `workflow` 방식으로 전환한 뒤 배포한다.
+GitHub Pages의 목표 publishing source는 **GitHub Actions**다. Actions workflow는 검증이 성공한 경우에만 `_site/` artifact를 배포한다. Pages의 publishing source 변경은 저장소 관리자 설정이므로 **Settings → Pages → Build and deployment → Source → GitHub Actions**에서 한 번 전환한다. workflow는 현재 설정을 확인하고 아직 legacy이면 검증만 수행한 뒤 배포를 건너뛴다.
 
 빌드 서버나 npm 설치는 필요 없고 Python 표준 라이브러리와 Node.js 파싱 검사만 사용한다.
 
