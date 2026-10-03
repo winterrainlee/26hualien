@@ -92,6 +92,6 @@ GitHub Pages의 목표 publishing source는 **GitHub Actions**다. Actions workf
 
 ## 지역 노트와 아이콘
 
-`notes/*.md`의 원본을 `scripts/build_notes.py`가 `notes.js`의 `REGION_NOTES`로 생성한다. `regionIds`의 현재 범주에 연결된 노트만 세며, 우하단 노트 수 버튼에서 제목 목록과 상세 읽기모드로 들어간다. 현재 루이수이의 세 항목은 테스트용이며 다른 지역은 0개다.
+`notes/*.md`의 원본을 `scripts/build_notes.py`가 `notes.js`의 `REGION_NOTES`로 생성한다. `regionIds`의 현재 범주에 연결된 노트만 세며, 우하단 노트 수 버튼에서 제목 목록과 상세 읽기모드로 들어간다. 현재 루이수이에는 7개의 기록 노트가 있고, 학교(志學村)에는 1개의 기록 노트가 있다.
 
 기차 아이콘은 [Lucide train-front](https://lucide.dev/icons/train-front)의 SVG를 2026-09-27에 받아 색상만 변경했다. 원본은 https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/train-front.svg 이며 라이선스는 `assets/LICENSE-lucide.txt`에 보존한다.
